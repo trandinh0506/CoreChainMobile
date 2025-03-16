@@ -58,7 +58,7 @@ export default function Index() {
       </View>
       {/* search */}
       <View className="my-5 mx-3">
-        <Searchbar placeholder="Search..." value="" style={{ height: 50 }} />
+        <Searchbar placeholder="Search..." value="" style={{ height: 55 }} />
       </View>
       {conversations?.length !== 0 ? (
         <>
