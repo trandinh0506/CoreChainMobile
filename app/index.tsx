@@ -7,39 +7,57 @@ import { ConversationItem } from '@/declarations/conversationItem';
 import ConversationRenderItem from './conversationItem';
 import { StatusBar } from 'expo-status-bar';
 import { useTheme } from '@/hooks/useTheme';
+import { useSocket } from '@/context/SocketContext';
+import { Socket } from 'socket.io-client';
 export default function Index() {
   const [conversations, setConversations] = useState<ConversationItem[]>([]);
   const { theme } = useTheme();
+  const socket: Socket | null = useSocket('/chat');
   useEffect(() => {
-    setConversations([
+    console.log(socket);
+    if (!socket) {
+      // TODO: show error message here
+      return;
+    }
+    socket.emit(
+      'getRecentConversations',
       {
-        id: 'conv-123',
-        avatar: 'https://picsum.photos/200',
-        name: 'Killan James',
-        timestamp: '4:30 PM',
-        latestMessage: 'Typing...',
-        isTyping: true,
-        unreadCount: 2,
+        userId: '67de08c7566eaca13ea2874f',
       },
-      {
-        id: 'conv-12332',
-        avatar: 'https://picsum.photos/200',
-        name: 'Killan James',
-        timestamp: '4:30 PM',
-        latestMessage: 'Hello',
-        isTyping: false,
-        unreadCount: 2,
-      },
-      {
-        id: 'conv-123312',
-        avatar: 'https://picsum.photos/200',
-        name: 'Killan James',
-        timestamp: '4:30 PM',
-        latestMessage: 'Typing...',
-        isTyping: true,
-        unreadCount: 2,
-      },
-    ]);
+      (val: ConversationItem[]) => {
+        console.log(val);
+        setConversations(val);
+      }
+    );
+    // setConversations([
+    //   {
+    //     id: 'conv-123',
+    //     avatar: 'https://picsum.photos/200',
+    //     name: 'Killan James',
+    //     timestamp: '4:30 PM',
+    //     latestMessage: 'Typing...',
+    //     isTyping: true,
+    //     unreadCount: 2,
+    //   },
+    //   {
+    //     id: 'conv-12332',
+    //     avatar: 'https://picsum.photos/200',
+    //     name: 'Killan James',
+    //     timestamp: '4:30 PM',
+    //     latestMessage: 'Hello',
+    //     isTyping: false,
+    //     unreadCount: 2,
+    //   },
+    //   {
+    //     id: 'conv-123312',
+    //     avatar: 'https://picsum.photos/200',
+    //     name: 'Killan James',
+    //     timestamp: '4:30 PM',
+    //     latestMessage: 'Typing...',
+    //     isTyping: true,
+    //     unreadCount: 2,
+    //   },
+    // ]);
   }, []);
 
   return (
@@ -60,9 +78,9 @@ export default function Index() {
       <View className="my-5 mx-3">
         <Searchbar placeholder="Search..." value="" style={{ height: 55 }} />
       </View>
+      {/* conversation item */}
       {conversations?.length !== 0 ? (
         <>
-          <ConversationRenderItem data={conversations[0]} />
           <View>
             <Animated.View entering={FadeIn} exiting={FadeOut}>
               <FlatList
