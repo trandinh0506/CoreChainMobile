@@ -4,14 +4,16 @@ import { Searchbar } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { ConversationItem } from '@/declarations/conversationItem';
-import ConversationRenderItem from './conversation/conversationItem';
+import ConversationRenderItem from './conversationItem';
 import { StatusBar } from 'expo-status-bar';
 import { useTheme } from '@/hooks/useTheme';
 import { useSocket } from '@/context/SocketContext';
 import { Socket } from 'socket.io-client';
+import { useUser } from '@/context/UserContext';
 export default function Index() {
   const [conversations, setConversations] = useState<ConversationItem[]>([]);
   const { theme } = useTheme();
+  const { user } = useUser();
   const socket: Socket | null = useSocket('/chat');
   useEffect(() => {
     console.log(socket);
@@ -22,14 +24,14 @@ export default function Index() {
     socket.emit(
       'getRecentConversations',
       {
-        userId: '67de08c7566eaca13ea2874f',
+        userId: user._id,
       },
       (val: ConversationItem[]) => {
-        console.log(val);
+        console.log({ val });
         setConversations(val);
       }
     );
-  }, []);
+  }, [socket]);
 
   return (
     <SafeAreaView

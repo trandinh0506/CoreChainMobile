@@ -12,9 +12,10 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [sockets, setSockets] = useState<SocketMap>({});
 
+  const apiUrl = process.env.EXPO_PUBLIC_API_URL;
   useEffect(() => {
     // initialize for chat namespace
-    const chatSocket = io('http://192.168.88.206:3001/chat', {
+    const chatSocket = io(`${apiUrl}/chat`, {
       transports: ['websocket'],
       withCredentials: true,
     });

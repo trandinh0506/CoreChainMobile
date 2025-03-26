@@ -18,7 +18,7 @@ export default function ConversationRenderItem({
       style={({ pressed }) => [
         { backgroundColor: pressed ? 'gray' : 'white' }, // change color when pressed
       ]}
-      onPress={() => router.push(`./${data.id}`)}
+      onPress={() => router.push(`/chat/${data.id}`)}
     >
       {/* Avatar */}
       <Image source={{ uri: data.avatar }} className="w-12 h-12 rounded-full" />

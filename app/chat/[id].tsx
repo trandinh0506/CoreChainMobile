@@ -71,7 +71,7 @@ export default function ChatScreen() {
       <View className="flex-row items-center justify-between px-3 py-2">
         {/* Back & User Name */}
         <View className="flex-row items-center">
-          <Pressable className="p-3" onPress={() => router.push('/')}>
+          <Pressable className="p-3" onPress={() => router.replace('/chat')}>
             <Ionicons name="arrow-back-sharp" size={28} color="blue" />
           </Pressable>
           <Text

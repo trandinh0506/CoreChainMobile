@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { useUser } from '@/context/UserContext';
 
 export default function LoginScreen() {
+  const apiUrl = process.env.EXPO_PUBLIC_API_URL;
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -13,7 +14,7 @@ export default function LoginScreen() {
   async function handleLogin() {
     try {
       // Gọi API đăng nhập
-      const res = await fetch('http://192.168.88.206:3001/api/v1/auth/login', {
+      const res = await fetch(`${apiUrl}/api/v1/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include', // gửi kèm cookie (nếu server set httpOnly cookie)
@@ -31,7 +32,7 @@ export default function LoginScreen() {
       if (data.access_token) {
         await AsyncStorage.setItem('accessToken', data.access_token);
         setUser({ ...data.user, accessToken: data.access_token });
-        router.replace('/');
+        router.replace('/(tabs)');
       }
     } catch (error) {
       console.error(error);
@@ -87,7 +88,7 @@ export default function LoginScreen() {
           Don't have an account?{' '}
           <Text
             className="text-purple-500 dark:text-purple-400 font-medium"
-            onPress={() => router.push('/')}
+            onPress={() => 1}
           >
             Register
           </Text>
