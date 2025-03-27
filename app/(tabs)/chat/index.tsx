@@ -10,10 +10,15 @@ import { useTheme } from '@/hooks/useTheme';
 import { useSocket } from '@/context/SocketContext';
 import { Socket } from 'socket.io-client';
 import { useUser } from '@/context/UserContext';
+import { Message } from '@/declarations/message';
 export default function Index() {
   const [conversations, setConversations] = useState<ConversationItem[]>([]);
+  const [messageByChat, setMessageByChat] = useState<Map<string, Message[]>>(
+    new Map()
+  );
   const { theme } = useTheme();
   const { user } = useUser();
+  console.log('user', user);
   const socket: Socket | null = useSocket('/chat');
   useEffect(() => {
     console.log(socket);
@@ -31,6 +36,26 @@ export default function Index() {
         setConversations(val);
       }
     );
+  }, [socket]);
+  useEffect(() => {
+    socket?.on('newMessage', (msg: Message) => {
+      setMessageByChat((prevState) => {
+        // Create a new Map based on the previous state
+        const newMap = new Map(prevState);
+
+        // Get existing messages for the conversation or initialize an empty array
+        const messages = newMap.get(msg.conversationId) || [];
+
+        // Prepend the new message to the messages array
+        newMap.set(msg.conversationId, [msg, ...messages]);
+
+        return newMap;
+      });
+    });
+
+    return () => {
+      socket?.off('newMessage');
+    };
   }, [socket]);
 
   return (

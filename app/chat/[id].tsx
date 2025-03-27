@@ -15,54 +15,49 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Entypo from '@expo/vector-icons/Entypo';
 import { useEffect, useState } from 'react';
-import io, { Socket } from 'socket.io-client';
+import { Socket } from 'socket.io-client';
 import SimpleLineIcons from '@expo/vector-icons/SimpleLineIcons';
 import { useSocket } from '@/context/SocketContext';
+import { useUser } from '@/context/UserContext';
+import { Message } from '@/declarations/message';
 
-export default function ChatScreen() {
+interface Props {
+  data: Message[];
+}
+export default function ChatScreen({ data }: Props) {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const { theme } = useTheme();
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [content, setContent] = useState('');
-  // const [socket, setSocket] =
-  //   useState<Socket<DefaultEventsMap, DefaultEventsMap>>();
+  const { user } = useUser();
+  const [messages, setMessages] = useState<Message[]>(data);
   const socket: Socket | null = useSocket('/chat');
 
-  useEffect(() => {
-    if (!socket) {
-      return;
-    }
-    // const newSocket = io('http://192.168.88.206:3001/chat');
-    socket.on('connect', () => {
-      console.log('connected');
-    });
-    // socket.emit(
-    //   'getConversationByUserIdAndOtherId',
-    //   {
-    //     userId: '67de08c7566eaca13ea2874f',
-    //     otherId: '67de2f8bce28bf57cc92dd1e',
-    //   },
-    //   (val: any) => {
-    //     console.log('got conversation', val);
-    //   }
-    // );
-    socket.emit(
+  const handleSendMessage = () => {
+    if (!content) return;
+    socket?.emit(
       'sendMessage',
       {
-        conversationId: '67de1d4b6e62ff32e8817d0a',
-        senderId: '67de08c7566eaca13ea2874f',
-        content: 'hello world',
+        conversationId: id as string,
+        senderId: user._id,
+        content,
       },
       (val: any) => {
         console.log('acknowledgement from server', val);
+        setContent('');
       }
     );
-    // return () => {
-    //   newSocket.close();
-    // };
+  };
+  useEffect(() => {
+    console.log('new message on');
+    socket?.on('newMessage', (msg: Message) => {
+      setMessages((prev) => [msg, ...prev]);
+    });
+    return () => {
+      socket?.off('newMessage');
+    };
   }, []);
-
   return (
     <SafeAreaView
       className={`flex-1 ${theme === 'dark' ? 'bg-black' : 'bg-white'}`}
@@ -89,10 +84,29 @@ export default function ChatScreen() {
         </Pressable>
       </View>
       {/* chat content */}
-      <ScrollView className="flex-1 px-3">
-        <Text className={theme === 'dark' ? 'text-white' : 'text-black'}>
-          Hello world
-        </Text>
+      <ScrollView className="flex-1 p-3">
+        {messages.map((message) => {
+          const isSent = message.senderId === user._id;
+          return (
+            <View
+              key={message._id}
+              className={`mb-2 max-w-[80%] p-3 rounded-lg ${
+                isSent ? 'bg-green-200 self-end' : 'bg-white self-start'
+              }`}
+            >
+              <Text
+                className={`text-base ${
+                  theme === 'dark' ? 'text-white' : 'text-black'
+                }`}
+              >
+                {message.content}
+              </Text>
+              <Text className="text-xs text-gray-500 mt-1 self-end">
+                {new Date(message.createdAt).toLocaleTimeString()}
+              </Text>
+            </View>
+          );
+        })}
       </ScrollView>
       {/* Footer Chat */}
       <KeyboardAvoidingView
@@ -142,7 +156,7 @@ export default function ChatScreen() {
             />
           </View>
           {content ? (
-            <Pressable className="p-1">
+            <Pressable onPress={handleSendMessage} className="p-1">
               <Ionicons name="send" size={24} color="blue" />
             </Pressable>
           ) : (
