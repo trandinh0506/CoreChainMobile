@@ -31,6 +31,10 @@ export default function ChatScreen() {
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [content, setContent] = useState('');
   const { user } = useUser();
+  if (!user) {
+    router.replace('/auth/login');
+    return;
+  }
   const { messages, addMessage, loadMessages, saveConversation } =
     useMessages();
   const socket = useSocket('/chat');

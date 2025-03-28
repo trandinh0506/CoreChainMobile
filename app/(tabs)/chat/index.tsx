@@ -10,12 +10,17 @@ import { useTheme } from '@/hooks/useTheme';
 import { useSocket } from '@/context/SocketContext';
 import { Socket } from 'socket.io-client';
 import { useUser } from '@/context/UserContext';
-import { Message } from '@/declarations/message';
+import { useRouter } from 'expo-router';
+
 export default function Index() {
   const [conversations, setConversations] = useState<ConversationItem[]>([]);
   const { theme } = useTheme();
+  const router = useRouter();
   const { user } = useUser();
-  console.log('user', user);
+  if (!user) {
+    router.replace('/auth/login');
+    return;
+  }
   const socket: Socket | null = useSocket('/chat');
   useEffect(() => {
     console.log(socket);

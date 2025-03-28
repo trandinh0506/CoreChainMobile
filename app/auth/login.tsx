@@ -9,7 +9,7 @@ export default function LoginScreen() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { setUser } = useUser();
+  const { saveUser } = useUser();
 
   async function handleLogin() {
     try {
@@ -27,13 +27,10 @@ export default function LoginScreen() {
       }
 
       const data = (await res.json()).data;
-      console.log(data);
-      // data.accessToken, data.user, ...
-      if (data.access_token) {
-        await AsyncStorage.setItem('accessToken', data.access_token);
-        setUser({ ...data.user, accessToken: data.access_token });
-        router.replace('/(tabs)');
-      }
+      console.log({ data });
+
+      saveUser({ ...data.user, accessToken: data.access_token });
+      router.replace('/(tabs)');
     } catch (error) {
       console.error(error);
     }
