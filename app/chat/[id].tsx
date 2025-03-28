@@ -1,5 +1,4 @@
-import { useTheme } from '@/hooks/useTheme';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -7,64 +6,89 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
+  FlatList,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Entypo from '@expo/vector-icons/Entypo';
-import { useEffect, useState } from 'react';
-import { Socket } from 'socket.io-client';
 import SimpleLineIcons from '@expo/vector-icons/SimpleLineIcons';
 import { useSocket } from '@/context/SocketContext';
 import { useUser } from '@/context/UserContext';
+import { useMessages } from '@/context/MessageContext';
+import { useTheme } from '@/hooks/useTheme';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Message } from '@/declarations/message';
 
-interface Props {
-  data: Message[];
-}
-export default function ChatScreen({ data }: Props) {
-  const { id } = useLocalSearchParams();
+export default function ChatScreen() {
+  const { id, chatName } = useLocalSearchParams<{
+    id: string;
+    chatName?: string;
+  }>();
   const router = useRouter();
   const { theme } = useTheme();
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [content, setContent] = useState('');
   const { user } = useUser();
-  const [messages, setMessages] = useState<Message[]>(data);
-  const socket: Socket | null = useSocket('/chat');
+  const { messages, addMessage, loadMessages, saveConversation } =
+    useMessages();
+  const socket = useSocket('/chat');
+
+  // Load messages from storage on mount
+  useEffect(() => {
+    loadMessages();
+  }, [loadMessages]);
+
+  // If no messages for current conversation, emit event to load messages from server
+  useEffect(() => {
+    if (!id) return;
+    if (!messages[id]) {
+      socket?.emit('getMessages', { conversationId: id }, (data: Message[]) => {
+        saveConversation(id, data);
+      });
+    }
+  }, [id, messages, socket, saveConversation]);
+
+  // Listen for new messages from server and update context
+  useEffect(() => {
+    const handleNewMessage = (msg: Message) => {
+      if (msg.conversationId === id) {
+        addMessage(msg);
+      }
+    };
+
+    socket?.on('newMessage', handleNewMessage);
+    return () => {
+      socket?.off('newMessage', handleNewMessage);
+    };
+  }, [socket, id, addMessage]);
+
+  // Retrieve messages for current conversation
+  const conversationMessages: Message[] = messages[id] || [];
 
   const handleSendMessage = () => {
     if (!content) return;
     socket?.emit(
       'sendMessage',
       {
-        conversationId: id as string,
+        conversationId: id,
         senderId: user._id,
         content,
       },
-      (val: any) => {
-        console.log('acknowledgement from server', val);
+      (ack: Message) => {
+        addMessage(ack);
         setContent('');
       }
     );
   };
-  useEffect(() => {
-    console.log('new message on');
-    socket?.on('newMessage', (msg: Message) => {
-      setMessages((prev) => [msg, ...prev]);
-    });
-    return () => {
-      socket?.off('newMessage');
-    };
-  }, []);
+
   return (
     <SafeAreaView
       className={`flex-1 ${theme === 'dark' ? 'bg-black' : 'bg-white'}`}
     >
       {/* Header */}
       <View className="flex-row items-center justify-between px-3 py-2">
-        {/* Back & User Name */}
         <View className="flex-row items-center">
           <Pressable className="p-3" onPress={() => router.replace('/chat')}>
             <Ionicons name="arrow-back-sharp" size={28} color="blue" />
@@ -74,40 +98,68 @@ export default function ChatScreen({ data }: Props) {
               theme === 'dark' ? 'text-white' : 'text-black'
             }`}
           >
-            user name
+            {chatName}
           </Text>
         </View>
-
-        {/* Info Icon */}
         <Pressable className="p-3">
           <MaterialIcons name="info" size={28} color="blue" />
         </Pressable>
       </View>
-      {/* chat content */}
-      <ScrollView className="flex-1 p-3">
-        {messages.map((message) => {
-          const isSent = message.senderId === user._id;
-          return (
-            <View
-              key={message._id}
-              className={`mb-2 max-w-[80%] p-3 rounded-lg ${
-                isSent ? 'bg-green-200 self-end' : 'bg-white self-start'
-              }`}
-            >
-              <Text
-                className={`text-base ${
-                  theme === 'dark' ? 'text-white' : 'text-black'
-                }`}
+
+      {/* Chat Content */}
+      <View style={{ flex: 1, padding: 12, paddingBottom: 80 }}>
+        <FlatList
+          data={conversationMessages.sort(
+            (a, b) =>
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          )}
+          keyExtractor={(item) => item._id}
+          renderItem={({ item }) => {
+            const isSent = item.senderId === user._id;
+            return (
+              <View
+                style={{
+                  marginBottom: 8,
+                  maxWidth: '80%',
+                  padding: 12,
+                  borderRadius: 8,
+                  alignSelf: isSent ? 'flex-end' : 'flex-start',
+                  backgroundColor:
+                    theme === 'dark'
+                      ? isSent
+                        ? '#2F855A'
+                        : '#2D3748'
+                      : isSent
+                      ? '#A0EED0'
+                      : '#FFFFFF',
+                }}
               >
-                {message.content}
-              </Text>
-              <Text className="text-xs text-gray-500 mt-1 self-end">
-                {new Date(message.createdAt).toLocaleTimeString()}
-              </Text>
-            </View>
-          );
-        })}
-      </ScrollView>
+                <Text
+                  style={{
+                    fontSize: 16,
+                    color: theme === 'dark' ? 'white' : 'black',
+                  }}
+                >
+                  {item.content}
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 12,
+                    color: 'gray',
+                    marginTop: 4,
+                    alignSelf: 'flex-end',
+                  }}
+                >
+                  {new Date(item.createdAt).toLocaleTimeString()}
+                </Text>
+              </View>
+            );
+          }}
+          inverted
+          contentContainerStyle={{ flexGrow: 1, justifyContent: 'flex-end' }}
+        />
+      </View>
+
       {/* Footer Chat */}
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -145,10 +197,12 @@ export default function ChatScreen({ data }: Props) {
           >
             <TextInput
               placeholder="Nhập tin nhắn..."
-              placeholderTextColor={`${theme === 'dark' ? 'white' : 'gray'}`}
-              className={`flex-1 py-2 ${
-                theme === 'dark' ? 'text-white' : 'text-black'
-              }`}
+              placeholderTextColor={theme === 'dark' ? 'white' : 'gray'}
+              style={{
+                flex: 1,
+                paddingVertical: 8,
+                color: theme === 'dark' ? 'white' : 'black',
+              }}
               onFocus={() => setIsInputFocused(true)}
               onBlur={() => setIsInputFocused(false)}
               value={content}
