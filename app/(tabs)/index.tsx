@@ -14,7 +14,7 @@ export default function Index() {
   useEffect(() => {
     const checkAuth = async () => {
       if (!isUserLoaded) return;
-      else if (!user) {
+      if (!user) {
         router.replace('/auth/login');
         return;
       }
