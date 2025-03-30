@@ -16,29 +16,23 @@ export default function Index() {
   const [conversations, setConversations] = useState<ConversationItem[]>([]);
   const { theme } = useTheme();
   const router = useRouter();
-  const { user } = useUser();
-  if (!user) {
-    router.replace('/auth/login');
-    return;
-  }
+  const { user, isUserLoaded } = useUser();
   const socket: Socket | null = useSocket('/chat');
   useEffect(() => {
-    console.log(socket);
-    if (!socket) {
-      // TODO: show error message here
+    if (!isUserLoaded) return; // Đợi đến khi user được load xong
+    if (!user) {
+      router.replace('/auth/login');
       return;
     }
+    if (!socket) return;
     socket.emit(
       'getRecentConversations',
-      {
-        userId: user._id,
-      },
+      { userId: user._id },
       (val: ConversationItem[]) => {
-        console.log({ val });
         setConversations(val);
       }
     );
-  }, [socket]);
+  }, [isUserLoaded, user, socket]);
 
   return (
     <SafeAreaView

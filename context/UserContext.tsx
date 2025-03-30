@@ -13,6 +13,7 @@ type UserContextType = {
   user: User | null;
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
   saveUser: (user: User | null) => Promise<void>;
+  isUserLoaded: boolean;
 };
 
 const UserKey = 'user';
@@ -21,9 +22,9 @@ const UserContext = createContext<UserContextType>({} as UserContextType);
 
 export function UserProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [isUserLoaded, setIsUserLoaded] = useState(false);
   const router = useRouter();
 
-  // Hàm lưu user vào AsyncStorage
   const saveUser = async (newUser: User | null) => {
     try {
       if (newUser) {
@@ -44,12 +45,11 @@ export function UserProvider({ children }: { children: ReactNode }) {
         if (userData) {
           const parsedUser: User = JSON.parse(userData);
           setUser(parsedUser);
-        } else {
-          router.replace('/auth/login');
         }
       } catch (error) {
         console.error('Lỗi khi load user:', error);
-        router.replace('/auth/login');
+      } finally {
+        setIsUserLoaded(true);
       }
     };
 
@@ -57,7 +57,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <UserContext.Provider value={{ user, setUser, saveUser }}>
+    <UserContext.Provider value={{ user, setUser, saveUser, isUserLoaded }}>
       {children}
     </UserContext.Provider>
   );
