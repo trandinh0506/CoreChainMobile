@@ -1,5 +1,6 @@
 import { useTheme } from '@/hooks/useTheme';
 import { Ionicons } from '@expo/vector-icons';
+import Feather from '@expo/vector-icons/Feather';
 import { Tabs } from 'expo-router';
 import tw from 'twrnc';
 
@@ -43,11 +44,11 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="settings"
+        name="menu"
         options={{
-          title: 'Settings',
+          title: 'Menu',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="settings" size={size} color={color} />
+            <Feather name="menu" size={size} color={color} />
           ),
         }}
       />

@@ -28,7 +28,7 @@ export default function LoginScreen() {
       const data = (await res.json()).data;
       console.log({ data });
 
-      saveUser({ ...data.user, accessToken: data.access_token });
+      await saveUser({ ...data.user, accessToken: data.access_token });
       router.replace('/');
     } catch (error) {
       console.error(error);

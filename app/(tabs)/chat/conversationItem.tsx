@@ -2,7 +2,6 @@ import { View, Text, Image, Pressable } from 'react-native';
 import { ConversationItem } from '@/declarations/conversationItem';
 import { useRouter } from 'expo-router';
 import { useTheme } from '@/hooks/useTheme';
-import { Message } from '@/declarations/message';
 interface ConversationItemProps {
   data: ConversationItem;
 }
