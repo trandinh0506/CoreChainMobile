@@ -33,7 +33,7 @@ export default function Index() {
     };
 
     checkAuth();
-  }, [user]);
+  }, [user, isUserLoaded]);
 
   if (loading) {
     return (

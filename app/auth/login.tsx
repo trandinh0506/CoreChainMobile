@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { useUser } from '@/context/UserContext';
 
@@ -30,7 +29,7 @@ export default function LoginScreen() {
       console.log({ data });
 
       saveUser({ ...data.user, accessToken: data.access_token });
-      router.replace('/(tabs)');
+      router.replace('/');
     } catch (error) {
       console.error(error);
     }
