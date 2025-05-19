@@ -3,11 +3,13 @@ import { useTheme } from '@/hooks/useTheme';
 import { useRouter } from 'expo-router';
 import { Text, View, Image, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useMessages } from '@/context/MessageContext';
 
 export default function Menu() {
   const { user } = useUser();
   const { theme } = useTheme();
   const router = useRouter();
+  const { clearMessages } = useMessages();
   return (
     <SafeAreaView
       className={`flex-1 ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-200'}`}
@@ -111,7 +113,9 @@ export default function Menu() {
           ? 'bg-red-600 active:bg-red-700'
           : 'bg-red-500 active:bg-red-600'
       }`}
-          onPress={() => console.log('Logout pressed')}
+          onPress={() => {
+            clearMessages();
+          }}
         >
           <Text className="text-white text-lg font-bold text-center">
             Logout
