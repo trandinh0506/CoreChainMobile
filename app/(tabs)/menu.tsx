@@ -4,12 +4,23 @@ import { useRouter } from 'expo-router';
 import { Text, View, Image, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useMessages } from '@/context/MessageContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 
 export default function Menu() {
-  const { user } = useUser();
+  const { user, setUser } = useUser();
   const { theme } = useTheme();
   const router = useRouter();
   const { clearMessages } = useMessages();
+
+  const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+  const handleLogout = async () => {
+    clearMessages();
+    setUser(null);
+    await AsyncStorage.clear();
+    await axios.post(`${apiUrl}/api/v1/auth/logout`);
+    router.replace('/auth/login');
+  };
   return (
     <SafeAreaView
       className={`flex-1 ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-200'}`}
@@ -113,9 +124,7 @@ export default function Menu() {
           ? 'bg-red-600 active:bg-red-700'
           : 'bg-red-500 active:bg-red-600'
       }`}
-          onPress={() => {
-            clearMessages();
-          }}
+          onPress={handleLogout}
         >
           <Text className="text-white text-lg font-bold text-center">
             Logout
