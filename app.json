@@ -37,6 +37,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "0f5c9aaf-4435-4cf2-ab7f-94ac3a6b843f"
+      }
+    },
+    "owner": "dinhtv"
   }
 }
