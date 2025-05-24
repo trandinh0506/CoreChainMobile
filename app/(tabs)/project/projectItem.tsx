@@ -1,6 +1,8 @@
 import { ProjectItem } from '@/declarations/projectItem';
 import { useRouter } from 'expo-router';
 import { View, Text, Image, Pressable } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { format } from 'date-fns';
 
 interface Props {
   item: ProjectItem;
@@ -8,63 +10,64 @@ interface Props {
 
 export default function ProjectRenderItem({ item }: Props) {
   const router = useRouter();
+
+  const cover = item.attachments?.[0];
+
+  const formattedRevenue = `$${item.revenue.toLocaleString()}`;
+  const formattedDates = `${format(
+    new Date(item.startDate),
+    'MMM dd'
+  )} → ${format(new Date(item.endDate), 'MMM dd, yyyy')}`;
+
+  const statusLabel =
+    ['Not started', 'In progress', 'Completed'][item.status] ?? 'Unknown';
+  const priorityLabel =
+    ['Low', 'Medium', 'High', 'Critical'][item.priority] ?? 'Unknown';
+
   return (
     <Pressable
-      className="bg-white dark:bg-gray-800 rounded-xl p-4 m-2 shadow-md"
+      className="rounded-xl m-2 overflow-hidden shadow-md"
       onPress={() => {
-        // @ts-ignore
         router.push(`/project/${item._id}`);
       }}
     >
-      {/* thumbnail & priority */}
-      <View className="flex-row justify-between items-center mb-2">
-        <Image
-          source={{ uri: item.thumbnail }}
-          className="w-16 h-16 rounded-lg"
-        />
-        <Text
-          className={`text-xs font-semibold px-2 py-1 rounded-full ${
-            item.priority === 'High Priority'
-              ? 'bg-red-500 text-white'
-              : item.priority === 'Medium Priority'
-              ? 'bg-yellow-400 text-black'
-              : 'bg-green-500 text-white'
-          }`}
-        >
-          {item.priority}
-        </Text>
-      </View>
+      <LinearGradient
+        colors={['#ffffff', '#f0f0f0']}
+        className="p-4 dark:bg-gray-800"
+      >
+        {/* Cover Image */}
+        {cover && (
+          <Image
+            source={{ uri: cover }}
+            className="w-full h-40 rounded-lg mb-4"
+            resizeMode="cover"
+          />
+        )}
 
-      {/* title & desc */}
-      <View className="mb-2">
-        <Text className="text-lg font-bold text-gray-900 dark:text-white">
-          {item.title}
+        {/* Title + Description */}
+        <Text className="text-lg font-bold text-gray-800 dark:text-white mb-1">
+          {item.name}
         </Text>
-        <Text className="text-sm text-gray-600 dark:text-gray-300">
+        <Text className="text-sm text-gray-600 dark:text-gray-300 mb-3">
           {item.description}
         </Text>
-      </View>
 
-      {/* team member & progress */}
-      <View className="flex-row items-center justify-between">
-        <View className="flex-row">
-          {item.teamMember.map((uri, index) => (
-            <Image
-              key={index}
-              source={{ uri }}
-              className="w-8 h-8 rounded-full -ml-1 border-2 border-white"
-            />
-          ))}
-        </View>
+        {/* Dates */}
+        <Text className="text-xs text-gray-500 mb-1">{formattedDates}</Text>
 
-        {/* custom progress bar */}
-        <View className="w-2/3 ml-2 h-3 bg-gray-300 rounded-full overflow-hidden">
-          <View
-            className="bg-green-500 h-full"
-            style={{ width: `${Math.floor(item.progress * 100)}%` }}
-          />
+        {/* Revenue, Priority & Status */}
+        <View className="flex-row justify-between items-center mt-2 flex-wrap">
+          <Text className="text-sm font-semibold text-green-600">
+            Revenue: {formattedRevenue}
+          </Text>
+          <Text className="text-sm font-semibold text-orange-500">
+            Priority: {priorityLabel}
+          </Text>
+          <Text className="text-sm font-semibold text-blue-500">
+            Status: {statusLabel}
+          </Text>
         </View>
-      </View>
+      </LinearGradient>
     </Pressable>
   );
 }

@@ -48,11 +48,16 @@ export default function Index() {
   useEffect(() => {
     if (!user) return;
     const test = async () => {
-      const response = await axios.get(`${apiUrl}/api/v1/projects`, {
+      const responseProject = await axios.get(`${apiUrl}/api/v1/projects`, {
         headers: { Authorization: `Bearer ${user.accessToken}` },
         withCredentials: true,
       });
-      console.log(response.data);
+      setTotalProject(responseProject.data.data.meta.total);
+      const responseTask = await axios.get(`${apiUrl}/api/v1/tasks`, {
+        headers: { Authorization: `Bearer ${user.accessToken}` },
+        withCredentials: true,
+      });
+      setTotalTask(responseTask.data.data.meta.total);
     };
     test();
   }, []);

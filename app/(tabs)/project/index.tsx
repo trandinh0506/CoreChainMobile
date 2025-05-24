@@ -3,57 +3,43 @@ import { ProjectItem } from '@/declarations/projectItem';
 import { useEffect, useState } from 'react';
 import { View, FlatList, Text } from 'react-native';
 import ProjectRenderItem from './projectItem';
-
-const MockData: ProjectItem[] = [
-  {
-    _id: '1',
-    thumbnail: 'https://picsum.photos/200',
-    title: 'Project 1',
-    description: 'This is a cool project',
-    teamMember: ['https://picsum.photos/200', 'https://picsum.photos/200'],
-    priority: 'High Priority',
-    progress: 0.7,
-  },
-  {
-    _id: '2',
-    thumbnail: 'https://picsum.photos/200',
-    title: 'Project 2',
-    description: 'Another awesome one',
-    teamMember: ['https://picsum.photos/200', 'https://picsum.photos/200'],
-    priority: 'Medium Priority',
-    progress: 0.3,
-  },
-  {
-    _id: '3',
-    thumbnail: 'https://picsum.photos/200',
-    title: 'Project 3',
-    description: 'Another awesome one',
-    teamMember: ['https://picsum.photos/200', 'https://picsum.photos/200'],
-    priority: 'Medium Priority',
-    progress: 0.3,
-  },
-  {
-    _id: '4',
-    thumbnail: 'https://picsum.photos/200',
-    title: 'Project 4',
-    description: 'Another awesome one',
-    teamMember: ['https://picsum.photos/200', 'https://picsum.photos/200'],
-    priority: 'Medium Priority',
-    progress: 0.3,
-  },
-];
+import axios from 'axios';
+import { useUser } from '@/context/UserContext';
+import { useRouter } from 'expo-router';
 
 export default function Project() {
   const [data, setData] = useState<ProjectItem[]>([]);
+  const { user, isUserLoaded } = useUser();
+  const router = useRouter();
+
+  const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
   useEffect(() => {
-    setData(MockData);
+    if (!isUserLoaded) return;
+    if (!user) {
+      router.replace('/auth/login');
+      return;
+    }
+  }, [user, isUserLoaded]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const getProjects = async () => {
+      const responseProject = await axios.get(`${apiUrl}/api/v1/projects`, {
+        headers: { Authorization: `Bearer ${user.accessToken}` },
+        withCredentials: true,
+      });
+      console.log('project data:', responseProject.data.data.projects);
+      setData(responseProject.data.data.projects as ProjectItem[]);
+    };
+    getProjects();
   }, []);
-  console.log(data);
+
   return (
     <SafeAreaView className="flex-1 bg-gray-100 dark:bg-gray-900">
       <View className="flex-row justify-between items-center px-4 relative my-3">
-        <Text className="text-3xl font-bold text-gray-900 dark:text-white">
+        <Text className="text-3xl font-bold text-gray-900 dark:text-white mb-3">
           Project
         </Text>
       </View>
@@ -61,7 +47,6 @@ export default function Project() {
         data={data}
         keyExtractor={(item) => item._id}
         renderItem={({ item }) => <ProjectRenderItem item={item} />}
-        contentContainerStyle={{ paddingBottom: 100 }}
       />
     </SafeAreaView>
   );
